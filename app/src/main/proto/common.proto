@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "ir.cafebazaar.booker.proto";
+option java_outer_classname = "BookerProto";
+
+package proto;
+
+import "google/api/annotations.proto";
+
+
+message AndroidClientInfo {
+  int32 sdkVersion = 1;
+  string model = 2;
+  string product = 3;
+  string osBuild = 4;
+  string hardware = 5;
+  string device = 6;
+  string mccMnc = 7;
+  string locale = 8;
+  string country = 9;
+}
+
+message WebClientInfo {
+  string os = 1;
+  string osMajorVersion = 2;
+  string osFullVersion = 3;
+  string applicationBuild = 4;
+}
+
+message RequestProperties {
+  string userAuthToken = 1;
+  string clientId = 2;
+  int32 clientVersion = 3;
+  AndroidClientInfo androidClientInfo = 4;
+  WebClientInfo webClientInfo = 5;
+}
+
+message ReplyProperties {
+  enum StatusCode {
+    OK = 0;
+    NOT_FOUND = 1;
+    NOT_AUTHORIZED = 2;
+    BAD_REQUEST = 3;
+    UPGRADE_REQUIRED = 4;
+    SERVER_ERROR = 5;
+  }
+  StatusCode statusCode = 1;
+  string serverVersion = 2;
+  string newUserAuthToken = 3;
+}
+
+message SimpleRequest {
+  RequestProperties requestProperties = 1;
+}
