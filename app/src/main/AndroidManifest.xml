@@ -2,19 +2,24 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="ir.cafebazaar.booker.booker">
 
+    <uses-permission android:name="android.permission.READ_PROFILE" />
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
-        <activity android:name=".BaseActivity">
+        android:name="app.BookerApplication"
+        android:theme="@style/Booker">
+        <activity android:name="activity.BaseActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name="activity.ReservationActivity"></activity>
     </application>
 
 </manifest>

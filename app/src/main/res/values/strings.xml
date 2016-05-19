@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Booker</string>
+    <string name="refresh">Refresh</string>
+    <string name="category">Category</string>
+    <string name="transition_toolbar">ToolbarTransition</string>
+    <string name="transition_avatar">AvatarTransition</string>
 </resources>

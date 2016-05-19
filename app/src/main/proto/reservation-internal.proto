@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "ir.cafebazaar.booker.proto";
+option java_outer_classname = "BookerProto";
+
+package proto;
+
+import "google/api/annotations.proto";
+import "reservation-public.proto";
+
+service Reservation {
+  rpc GetReservation(GetReservationRequest) returns (GetReservationReply) {
+    option (google.api.http) = {
+      get: "/reservation/{objectURI}"
+    };
+  }
+  rpc PostReservation(PostReservationRequest) returns (PostReservationReply) {
+    option (google.api.http) = {
+      post: "/reservation/{objectURI}"
+      body: "*"
+    };
+  }
+}

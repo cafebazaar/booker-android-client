@@ -1,6 +1,33 @@
 apply plugin: 'com.android.application'
 apply plugin: 'com.google.protobuf'
 
+protobuf {
+    protoc {
+        artifact = 'com.google.protobuf:protoc:3.0.0-beta-2'
+    }
+    plugins {
+        grpc {
+            artifact = 'io.grpc:protoc-gen-grpc-java:0.13.2'
+        }
+    }
+    generateProtoTasks {
+        // all() returns the collection of all protoc tasks
+        all().each { task ->
+            task.builtins {
+                javanano {
+                    option 'store_unknown_fields=true'
+                    option 'ignore_services=true'
+                }
+            }
+            task.plugins {
+                grpc {
+                    option 'nano=true'
+                }
+            }
+        }
+    }
+}
+
 android {
     compileSdkVersion 23
     buildToolsVersion "23.0.2"
@@ -12,8 +39,20 @@ android {
         versionCode 1
         versionName "1.0"
     }
+
     buildTypes {
+        debug {
+            buildConfigField "String", "RESERVATION_SRV_HOST", "brv.lb.cafebazaar.ir"
+            buildConfigField "Integer", "RESERVATION_SRV_PORT", "30801"
+            buildConfigField "String", "RESOURCES_SRV_HOST", "brc.lb.cafebazaar.ir"
+            buildConfigField "Integer", "RESOURCES_SRV_PORT", "30802"
+        }
         release {
+            buildConfigField "String", "RESERVATION_SRV_HOST", "brv.lb.cafebazaar.ir"
+            buildConfigField "Integer", "RESERVATION_SRV_PORT", "30801"
+            buildConfigField "String", "RESOURCES_SRV_HOST", "brc.lb.cafebazaar.ir"
+            buildConfigField "Integer", "RESOURCES_SRV_PORT", "30802"
+
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
@@ -24,6 +63,7 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:23.2.0'
+    compile "com.android.support:recyclerview-v7:23.2.0"
 
     provided 'javax.annotation:jsr250-api:1.0'
     compile 'com.squareup.okhttp:okhttp:2.2.0'
@@ -32,3 +72,4 @@ dependencies {
     compile 'io.grpc:grpc-stub:0.13.2'
     protobuf files('lib/google.tar.gz')
 }
+

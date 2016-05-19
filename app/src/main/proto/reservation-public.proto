@@ -1,0 +1,39 @@
+
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "ir.cafebazaar.booker.proto";
+option java_outer_classname = "BookerProto";
+
+package proto;
+
+import "google/api/annotations.proto";
+import "common.proto";
+
+message ReservationInstance {
+  uint64 startTimestamp = 1;
+  uint64 endTimestamp = 2;
+  string userID = 3;
+}
+
+message GetReservationRequest {
+  RequestProperties requestProperties = 1;
+  string objectURI = 2;
+  uint64 timestamp = 3;
+}
+
+message GetReservationReply {
+  ReplyProperties replyProperties = 1;
+  ReservationInstance reservation = 2;
+}
+
+message PostReservationRequest {
+  RequestProperties requestProperties = 1;
+  string objectURI = 2;
+  ReservationInstance reservation = 3;
+}
+
+message PostReservationReply {
+  ReplyProperties replyProperties = 1;
+  ReservationInstance reservation = 2;
+}
