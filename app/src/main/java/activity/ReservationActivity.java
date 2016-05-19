@@ -14,10 +14,13 @@ import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 
+import android.view.View;
 import android.widget.TextView;
 
 import java.util.ArrayList;
 
+import fragment.CategorySelectionFragment;
+import fragment.ItemSelectionFragment;
 import ir.cafebazaar.booker.booker.R;
 import model.Category;
 import widget.AvatarView;
@@ -27,6 +30,7 @@ public class ReservationActivity extends AppCompatActivity {
     private static final String EXTRA_CATEGORY = "category";
     private static final String EXTRA_USER = "user";
 
+    public Category category;
 
     public String name;
     public String photoURI;
@@ -63,7 +67,36 @@ public class ReservationActivity extends AppCompatActivity {
         photoURI = user.get(1);
         name = user.get(0);
 
+        category = getIntent().getParcelableExtra(EXTRA_CATEGORY);
+
         setUpToolbar();
+        if (savedInstanceState == null) {
+            attachCategoryGridFragment();
+        } else {
+            setProgressBarVisibility(false);
+        }
+        supportPostponeEnterTransition();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.category_container);
+        if (fragment != null) {
+            fragment.onActivityResult(requestCode, resultCode, data);
+        }
+    }
+
+
+    private void attachCategoryGridFragment() {
+        FragmentManager supportFragmentManager = getSupportFragmentManager();
+        Fragment fragment = supportFragmentManager.findFragmentById(R.id.category_container);
+        if (!(fragment instanceof ItemSelectionFragment)) {
+            fragment = ItemSelectionFragment.newInstance();
+        }
+        supportFragmentManager.beginTransaction()
+                .replace(R.id.category_container, fragment)
+                .commit();
+        setProgressBarVisibility(false);
     }
 
     private void setUpToolbar() {

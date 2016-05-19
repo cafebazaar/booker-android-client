@@ -1,0 +1,93 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/booker_blank"
+    android:transitionGroup="false"
+    android:orientation="vertical"
+    tools:ignore="Overdraw,UnusedAttribute">
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar_player"
+        android:layout_width="match_parent"
+        android:layout_height="?android:attr/actionBarSize"
+        style="@style/Booker.TextAppearance.Title"
+        android:background="@color/booker_primary"
+        android:elevation="@dimen/elevation_header"
+        tools:ignore="UnusedAttribute">
+
+        <widget.AvatarView
+            android:id="@+id/avatar"
+            android:layout_width="@dimen/size_avatar_toolbar"
+            android:layout_height="@dimen/size_avatar_toolbar"
+            android:layout_marginEnd="@dimen/spacing_double"
+            android:layout_marginRight="@dimen/spacing_double"
+            android:transitionName="@string/transition_avatar"
+            tools:ignore="UnusedAttribute" />
+
+        <TextView android:id="@+id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:ignore="PrivateResource"
+            style="@style/Booker.TextAppearance.Title.Inverse"
+            android:layout_gravity="center_vertical|start" />
+
+    </android.support.v7.widget.Toolbar>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:textAppearance="?android:attr/textAppearanceLargeInverse"
+        style="@style/Booker.TextAppearance.Title.Inverse"
+        android:text="..."
+        android:id="@+id/textViewStatus"
+        android:layout_gravity="right" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        style="@style/Booker.TextAppearance.Title.Inverse"
+        android:text="From:"
+        android:id="@+id/textView"
+        android:layout_gravity="right" />
+
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="number"
+        android:ems="10"
+        android:text="400"
+        style="@style/Booker.TextAppearance.Title.Inverse"
+        android:id="@+id/editTextFrom" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        style="@style/Booker.TextAppearance.Title.Inverse"
+        android:text="To:"
+        android:id="@+id/textView1"
+        android:layout_gravity="right" />
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="number"
+        android:ems="10"
+        android:text="600"
+        style="@style/Booker.TextAppearance.Title.Inverse"
+        android:id="@+id/editTextTo" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Reserve"
+        android:id="@+id/button"
+        android:layout_gravity="center_horizontal" />
+
+</LinearLayout>

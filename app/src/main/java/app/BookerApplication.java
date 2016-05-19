@@ -10,7 +10,7 @@ public class BookerApplication extends Application{
         return singleton;
     }
 
-    public void BookerApplication(){
+    public BookerApplication(){
         singleton = this;
     }
 }

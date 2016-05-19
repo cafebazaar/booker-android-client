@@ -7,27 +7,36 @@ import android.content.pm.PackageManager;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 
+import com.squareup.okhttp.ConnectionSpec;
+import com.squareup.okhttp.TlsVersion;
+
 import java.io.BufferedInputStream;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.security.KeyStore;
-import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
-import java.net.ssl.SSLContext;
-import java.net.ssl.SSLSocketFactory;
-import java.net.ssl.TrustManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManagerFactory;
+import javax.security.auth.x500.X500Principal;
 
 import app.BookerApplication;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.internal.GrpcUtil;
+import io.grpc.okhttp.OkHttpChannelBuilder;
 import ir.cafebazaar.booker.booker.BuildConfig;
+import ir.cafebazaar.booker.booker.R;
 import ir.cafebazaar.booker.proto.nano.AndroidClientInfo;
 import ir.cafebazaar.booker.proto.nano.RequestProperties;
 import ir.cafebazaar.booker.proto.nano.ReservationGrpc;
+import ir.cafebazaar.booker.proto.nano.ResourcesGrpc;
 
 public class GRPCHelper {
 
@@ -79,39 +88,71 @@ public class GRPCHelper {
         return rp;
     }
 
-    public SSLSocketFactory getSocketFactory() {
-
-        CertificateFactory cf = CertificateFactory.getInstance();
-        InputStream caInput = new BufferedInputStream(new FileInputStream("load-der.crt"));
-        Certificate ca;
+    /**
+     * Creates an SSLSocketFactory which contains {@code certChainFile} as its only root certificate.
+     */
+    public static SSLSocketFactory newSslSocketFactoryForCa(File certChainFile) throws Exception {
+        InputStream is = new FileInputStream(certChainFile);
         try {
-            ca = cf.generateCertificate(caInput);
-            System.out.println("ca=" + ((X509Certificate) ca).getSubjectDN());
+            return newSslSocketFactoryForCa(is);
         } finally {
-            caInput.close();
+            is.close();
         }
-
-        String keyStoreType = KeyStore.getDefaultType();
-        KeyStore keyStore = KeyStore.getInstance(keyStoreType);
-        keyStore.load(null, null);
-        keyStore.setCertificateEntry("ca", ca);
-
-        String tmfAlgorithm = TrustManagerFactory.getDefaultAlgorithm();
-        TrustManagerFactory tmf = TrustManagerFactory.getInstance(tmfAlgorithm);
-        tmf.init(keyStore);
-
-        SSLContext context = SSLContext.getInstance("TLS");
-        context.init(null, tmf.getTrustManagers(), null);
-        return context.getSocketFactory();
-
     }
-    public ReservationGrpc.ReservationBlockingStub getReservationGrpc() {
+
+    /**
+     * Creates an SSLSocketFactory which contains {@code certChainFile} as its only root certificate.
+     */
+    public static SSLSocketFactory newSslSocketFactoryForCa(InputStream certChain) throws Exception {
+        KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
+        ks.load(null, null);
+        CertificateFactory cf = CertificateFactory.getInstance("X.509");
+        X509Certificate cert = (X509Certificate) cf.generateCertificate(
+                new BufferedInputStream(certChain));
+        X500Principal principal = cert.getSubjectX500Principal();
+        ks.setCertificateEntry(principal.getName("RFC2253"), cert);
+
+        // Set up trust manager factory to use our key store.
+        TrustManagerFactory trustManagerFactory =
+                TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        trustManagerFactory.init(ks);
+        SSLContext context = SSLContext.getInstance("TLS");
+        context.init(null, trustManagerFactory.getTrustManagers(), null);
+        return context.getSocketFactory();
+    }
+
+    private ManagedChannel createChannel(String host, int port, InputStream cert) {
+        OkHttpChannelBuilder builder = OkHttpChannelBuilder.forAddress(host, port)
+                .connectionSpec(new ConnectionSpec.Builder(OkHttpChannelBuilder.DEFAULT_CONNECTION_SPEC)
+                        .tlsVersions(ConnectionSpec.MODERN_TLS.tlsVersions().toArray(new TlsVersion[0]))
+                        .build());
+        try {
+            builder.sslSocketFactory(newSslSocketFactoryForCa(cert));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return builder.build();
+    }
+
+    public ReservationGrpc.ReservationBlockingStub getReservationGrpc() throws IOException {
         // TODO: cache
         if (mReservationChannel == null) {
-            mReservationChannel = ManagedChannelBuilder.forAddress(BuildConfig.RESERVATION_SRV_HOST, BuildConfig.RESERVATION_SRV_PORT)
-                    .build();
+            mReservationChannel = createChannel(
+                    BuildConfig.RESERVATION_SRV_HOST,
+                    BuildConfig.RESERVATION_SRV_PORT,
+                    BookerApplication.getInstance().getResources().openRawResource(R.raw.reservation));
         }
         return ReservationGrpc.newBlockingStub(mReservationChannel);
     }
 
+    public ResourcesGrpc.ResourcesBlockingStub getResourcesGrpc() throws IOException {
+        // TODO: cache
+        if (mReservationChannel == null) {
+            mReservationChannel = createChannel(
+                    BuildConfig.RESOURCES_SRV_HOST,
+                    BuildConfig.RESOURCES_SRV_PORT,
+                    BookerApplication.getInstance().getResources().openRawResource(R.raw.resources));
+        }
+        return ResourcesGrpc.newBlockingStub(mReservationChannel);
+    }
 }

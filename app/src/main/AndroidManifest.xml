@@ -4,6 +4,7 @@
 
     <uses-permission android:name="android.permission.READ_PROFILE" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
@@ -20,6 +21,8 @@
             </intent-filter>
         </activity>
         <activity android:name="activity.ReservationActivity"></activity>
+        <activity android:name="activity.ItemActivity"></activity>
+
     </application>
 
 </manifest>

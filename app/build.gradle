@@ -42,15 +42,15 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField "String", "RESERVATION_SRV_HOST", "brv.lb.cafebazaar.ir"
+            buildConfigField "String", "RESERVATION_SRV_HOST", "\"brv.lb.cafebazaar.ir\""
             buildConfigField "Integer", "RESERVATION_SRV_PORT", "30801"
-            buildConfigField "String", "RESOURCES_SRV_HOST", "brc.lb.cafebazaar.ir"
+            buildConfigField "String", "RESOURCES_SRV_HOST", "\"brc.lb.cafebazaar.ir\""
             buildConfigField "Integer", "RESOURCES_SRV_PORT", "30802"
         }
         release {
-            buildConfigField "String", "RESERVATION_SRV_HOST", "brv.lb.cafebazaar.ir"
+            buildConfigField "String", "RESERVATION_SRV_HOST", "\"brv.lb.cafebazaar.ir\""
             buildConfigField "Integer", "RESERVATION_SRV_PORT", "30801"
-            buildConfigField "String", "RESOURCES_SRV_HOST", "brc.lb.cafebazaar.ir"
+            buildConfigField "String", "RESOURCES_SRV_HOST", "\"brc.lb.cafebazaar.ir\""
             buildConfigField "Integer", "RESOURCES_SRV_PORT", "30802"
 
             minifyEnabled true

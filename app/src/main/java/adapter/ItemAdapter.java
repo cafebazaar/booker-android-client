@@ -33,27 +33,23 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import helper.ApiLevelHelper;
 import helper.GRPCHelper;
 import ir.cafebazaar.booker.booker.R;
 import ir.cafebazaar.booker.proto.nano.CategoriesGetReply;
 import ir.cafebazaar.booker.proto.nano.CategoriesGetRequest;
-import ir.cafebazaar.booker.proto.nano.GetReservationReply;
-import ir.cafebazaar.booker.proto.nano.GetReservationRequest;
-import ir.cafebazaar.booker.proto.nano.ReservationGrpc;
+import ir.cafebazaar.booker.proto.nano.CategoryItemsGetReply;
+import ir.cafebazaar.booker.proto.nano.CategoryItemsGetRequest;
 import ir.cafebazaar.booker.proto.nano.ResourcesGrpc;
 import model.Category;
+import model.Item;
 import model.Theme;
-import helper.ApiLevelHelper;
 
-
-import java.io.IOException;
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.List;
-
-public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.ViewHolder> {
+public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> {
 
     public static final String DRAWABLE = "drawable";
     private static final String ICON_CATEGORY = "icon_category_";
@@ -61,7 +57,8 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.ViewHo
     private final String mPackageName;
     private final LayoutInflater mLayoutInflater;
     private final Activity mActivity;
-    private List<Category> mCategories = new ArrayList<Category>(3);
+    private final String mCategoryName;
+    private List<Item> mItems = new ArrayList<Item>(3);
 
     private OnItemClickListener mOnItemClickListener;
 
@@ -69,12 +66,13 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.ViewHo
         void onClick(View view, int position);
     }
 
-    public CategoryAdapter(Activity activity) {
+    public ItemAdapter(Activity activity, String categoryName) {
         mActivity = activity;
         mResources = mActivity.getResources();
         mPackageName = mActivity.getPackageName();
         mLayoutInflater = LayoutInflater.from(activity.getApplicationContext());
-        new UpdateCategoriesTask().execute();
+        new UpdateItemsTask().execute();
+        mCategoryName = categoryName;
     }
 
     @Override
@@ -85,11 +83,10 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.ViewHo
 
     @Override
     public void onBindViewHolder(ViewHolder holder, final int position) {
-        Category category = mCategories.get(position);
-        Theme theme = category.getTheme();
-        setCategoryIcon(category, holder.icon);
+        Item item = mItems.get(position);
+        Theme theme = item.getTheme();
 
-        holder.title.setText(category.getName());
+        holder.title.setText(item.getName());
         holder.title.setTextColor(getColor(theme.getTextPrimaryColor()));
         holder.title.setBackgroundColor(getColor(theme.getPrimaryColor()));
         holder.itemView.setOnClickListener(new View.OnClickListener() {
@@ -100,39 +97,42 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.ViewHo
         });
     }
 
+    public Item getItem(int position) {
+        return mItems.get(position);
+    }
+
     @Override
     public long getItemId(int position) {
-        return mCategories.get(position).getId().hashCode();
+        return mItems.get(position).getId().hashCode();
     }
 
     @Override
     public int getItemCount() {
-        return mCategories.size();
+        return mItems.size();
     }
 
-    public Category getItem(int position) {
-        return mCategories.get(position);
-    }
-
-    private class UpdateCategoriesTask extends AsyncTask<Void, Void, Boolean> {
+    private class UpdateItemsTask extends AsyncTask<Void, Void, Boolean> {
         protected Boolean doInBackground(Void... v) {
-            Log.d(CategoryAdapter.class.getSimpleName(), "UpdateCategoriesTask :: doInBackground :: 1");
+            Log.d(ItemAdapter.class.getSimpleName(), "UpdateCategoriesTask :: doInBackground :: 1");
 
             try {
+                Log.d(ItemAdapter.class.getSimpleName(), "Update categories task :: before getResourcesGrpc");
                 ResourcesGrpc.ResourcesBlockingStub grpcService = GRPCHelper.getInstance().getResourcesGrpc();
 
-                CategoriesGetRequest req = new CategoriesGetRequest();
+                CategoryItemsGetRequest req = new CategoryItemsGetRequest();
                 req.requestProperties = GRPCHelper.newRPWithDeviceInfo();
-                CategoriesGetReply reply = grpcService.getCategories(req);
+                req.name = mCategoryName;
+                Log.d(ItemAdapter.class.getSimpleName(), "Update categories task :: before getCategoryItems");
+                CategoryItemsGetReply reply = grpcService.getCategoryItems(req);
 
-                mCategories.clear();
-                for (ir.cafebazaar.booker.proto.nano.Category c : reply.categories) {
-                    mCategories.add(new Category(c.name, c.name, Theme.booker));
+                mItems.clear();
+                for (ir.cafebazaar.booker.proto.nano.Item i : reply.items) {
+                    mItems.add(new Item(i.name, i.name, Theme.green));
                 }
-
+                Log.d(ItemAdapter.class.getSimpleName(), "Update categories task :: serverVersion=" + reply.replyProperties.serverVersion);
                 return true;
             } catch (Exception e) {
-                Log.e(CategoryAdapter.class.getSimpleName(), "Exception while getting grpcService", e);
+                Log.e(ItemAdapter.class.getSimpleName(), "Exception while getting grpcService", e);
                 e.printStackTrace();
                 return false;
             }
@@ -149,47 +149,42 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.ViewHo
         mOnItemClickListener = onItemClickListener;
     }
 
-    private void setCategoryIcon(Category category, ImageView icon) {
-        final int categoryImageResource = mResources.getIdentifier(
-                ICON_CATEGORY + category.getId(), DRAWABLE, mPackageName);
-    }
-
     /**
      * Loads an icon that indicates that a category has already been solved.
      *
-     * @param category The solved category to display.
+     * @param item The solved category to display.
      * @param categoryImageResource The category's identifying image.
      * @return The icon indicating that the category has been solved.
      */
-    private Drawable loadSolvedIcon(Category category, int categoryImageResource) {
+    private Drawable loadSolvedIcon(Item item, int categoryImageResource) {
         if (ApiLevelHelper.isAtLeast(Build.VERSION_CODES.LOLLIPOP)) {
-            return loadSolvedIconLollipop(category, categoryImageResource);
+            return loadSolvedIconLollipop(item, categoryImageResource);
         }
-        return loadSolvedIconPreLollipop(category, categoryImageResource);
+        return loadSolvedIconPreLollipop(item, categoryImageResource);
     }
 
     @NonNull
-    private LayerDrawable loadSolvedIconLollipop(Category category, int categoryImageResource) {
-        final Drawable categoryIcon = loadTintedCategoryDrawable(category, categoryImageResource);
+    private LayerDrawable loadSolvedIconLollipop(Item item, int categoryImageResource) {
+        final Drawable categoryIcon = loadTintedCategoryDrawable(item, categoryImageResource);
         Drawable[] layers = new Drawable[]{categoryIcon}; // ordering is back to front
         return new LayerDrawable(layers);
     }
 
-    private Drawable loadSolvedIconPreLollipop(Category category, int categoryImageResource) {
-        return loadTintedCategoryDrawable(category, categoryImageResource);
+    private Drawable loadSolvedIconPreLollipop(Item item, int categoryImageResource) {
+        return loadTintedCategoryDrawable(item, categoryImageResource);
     }
 
     /**
      * Loads and tints a drawable.
      *
-     * @param category The category providing the tint color
+     * @param item The category providing the tint color
      * @param categoryImageResource The image resource to tint
      * @return The tinted resource
      */
-    private Drawable loadTintedCategoryDrawable(Category category, int categoryImageResource) {
+    private Drawable loadTintedCategoryDrawable(Item item, int categoryImageResource) {
         final Drawable categoryIcon = ContextCompat
                 .getDrawable(mActivity, categoryImageResource).mutate();
-        return wrapAndTint(categoryIcon, category.getTheme().getPrimaryColor());
+        return wrapAndTint(categoryIcon, item.getTheme().getPrimaryColor());
     }
 
     private Drawable wrapAndTint(Drawable done, @ColorRes int color) {
